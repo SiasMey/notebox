@@ -9,9 +9,23 @@ import (
 )
 
 func main() {
+	if err := test(context.Background()); err != nil {
+		fmt.Println(err)
+	}
 	if err := build(context.Background()); err != nil {
 		fmt.Println(err)
 	}
+	if err := version(context.Background()); err != nil {
+		fmt.Println(err)
+	}
+	if err := publish(context.Background()); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func test(ctx context.Context) error {
+	fmt.Println("Testing with Dagger")
+	return nil
 }
 
 func build(ctx context.Context) error {
@@ -76,5 +90,15 @@ func build(ctx context.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func version(ctx context.Context) error {
+	fmt.Println("Versioning with Dagger")
+	return nil
+}
+
+func publish(ctx context.Context) error {
+	fmt.Println("Publishing with Dagger")
 	return nil
 }
