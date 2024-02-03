@@ -105,7 +105,7 @@ func version(ctx context.Context) error {
 		WithWorkdir("/src")
 
 	// out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
-	out, err := convco.WithExec([]string{"version", "-C", "/src"}).Stdout(ctx)
+	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
 	fmt.Println(out)
 
 	if err != nil {
