@@ -29,16 +29,28 @@ func build(ctx context.Context) error {
 	defer client.Close()
 
 	// get reference to the local project
-	src := client.Host().Directory(".")
+	cmd := client.Host().Directory("./cmd")
+	pkg := client.Host().Directory("./pkg")
+	gomod := client.Host().File("./go.mod")
+	gosum := client.Host().File("./go.sum")
 
 	// create empty directory to put build outputs
 	outputs := client.Directory()
 
 	// get `golang` image
-	golang := client.Container().From("golang:latest")
+	golang := client.Container().From("golang:1.21")
 
 	// mount cloned repository into `golang` image
-	golang = golang.WithDirectory("/src", src).WithWorkdir("/src")
+	golang = golang.
+		WithDirectory("/src/cmd", cmd).
+		WithDirectory("/src/pkg", pkg).
+		WithFile("/src/go.mod", gomod).
+		WithFile("/src/go.sum", gosum).
+		WithWorkdir("/src").
+		WithMountedCache("/go/pkg/mod", client.CacheVolume("go-mod-121")).
+		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
+		WithMountedCache("/go/build-cache", client.CacheVolume("go-build-121")).
+		WithEnvVariable("GOCACHE", "/go/build-cache")
 
 	for _, goos := range oses {
 		for _, goarch := range arches {
