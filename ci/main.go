@@ -95,6 +95,23 @@ func build(ctx context.Context) error {
 
 func version(ctx context.Context) error {
 	fmt.Println("Versioning with Dagger")
+	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
+
+	src := client.Host().Directory(".")
+
+	convco := client.Container().From("convco/convco")
+	convco = convco.
+		WithDirectory("/src", src).
+		WithWorkdir("/src")
+
+	// out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
+	out, err := convco.WithExec([]string{"version", "-C", "/src"}).Stdout(ctx)
+	fmt.Println(out)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
