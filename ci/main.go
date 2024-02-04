@@ -9,38 +9,37 @@ import (
 )
 
 func main() {
-	if err := test(context.Background()); err != nil {
+	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
+	if err != nil {
 		fmt.Println(err)
 	}
-	if err := build(context.Background()); err != nil {
+	defer client.Close()
+
+	if err := test(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := version(context.Background()); err != nil {
+	if err := build(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := publish(context.Background()); err != nil {
+	if err := version(context.Background(), client); err != nil {
+		fmt.Println(err)
+	}
+	if err := publish(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
 }
 
-func test(ctx context.Context) error {
+func test(ctx context.Context, client* dagger.Client) error {
 	fmt.Println("Testing with Dagger")
 	return nil
 }
 
-func build(ctx context.Context) error {
+func build(ctx context.Context, client* dagger.Client) error {
 	fmt.Println("Building with Dagger")
 
 	// define build matrix
 	oses := []string{"linux", "darwin"}
 	arches := []string{"amd64", "arm64"}
-
-	// initialize Dagger client
-	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
-	if err != nil {
-		return err
-	}
-	defer client.Close()
 
 	// get reference to the local project
 	cmd := client.Host().Directory("./cmd")
@@ -85,7 +84,7 @@ func build(ctx context.Context) error {
 		}
 	}
 	// write build artifacts to host
-	_, err = outputs.Export(ctx, ".")
+	_, err := outputs.Export(ctx, ".")
 	if err != nil {
 		return err
 	}
@@ -93,21 +92,33 @@ func build(ctx context.Context) error {
 	return nil
 }
 
-func version(ctx context.Context) error {
+func version(ctx context.Context, client* dagger.Client) error {
 	fmt.Println("Versioning with Dagger")
-	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
 
 	src := client.Host().Directory(".")
-
 	convco := client.Container().From("convco/convco")
 	convco = convco.
-		WithDirectory("/src", src).
-		WithWorkdir("/src")
+		WithDirectory("/tmp", src).
+		WithWorkdir("/tmp")
 
 	// out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
 	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
+	if err != nil {
+		return err
+	}
 	fmt.Println(out)
+	if err != nil {
+		return err
+	}
 
+	out, err = convco.WithExec([]string{"changelog", "-u", out}).Stdout(ctx)
+	if err != nil {
+		return err
+	}
+	fc, err := os.Create("CHANGELOG.md")
+	defer fc.Close()
+
+	_, err = fc.WriteString(out)
 	if err != nil {
 		return err
 	}
@@ -115,7 +126,7 @@ func version(ctx context.Context) error {
 	return nil
 }
 
-func publish(ctx context.Context) error {
+func publish(ctx context.Context, client* dagger.Client) error {
 	fmt.Println("Publishing with Dagger")
 	return nil
 }
