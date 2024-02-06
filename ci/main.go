@@ -165,6 +165,7 @@ func changelog(ctx context.Context, client *dagger.Client, version string) (stri
 func publish(ctx context.Context, client *dagger.Client, version string, log string) error {
 	//todo(siasmey@gmail.com): publish all artifacts to platform
 	//changelog/version and build artifacts need to go in here
+	//should this clone, tag and commit before doing the publish?
 	fmt.Println("Publishing with Dagger")
 	fv, err := os.Create("version.txt")
 	defer fv.Close()
