@@ -33,12 +33,9 @@ func main() {
 	if err := build(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := publish(context.Background(), client); err != nil {
+	if err := publish(context.Background(), client, version, log); err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Println(version)
-	fmt.Println(log)
 }
 
 func lint(ctx context.Context, client *dagger.Client) error {
@@ -165,9 +162,28 @@ func changelog(ctx context.Context, client *dagger.Client, version string) (stri
 	return out, nil
 }
 
-func publish(ctx context.Context, client *dagger.Client) error {
+func publish(ctx context.Context, client *dagger.Client, version string, log string) error {
 	//todo(siasmey@gmail.com): publish all artifacts to platform
 	//changelog/version and build artifacts need to go in here
 	fmt.Println("Publishing with Dagger")
+	fv, err := os.Create("version.txt")
+	defer fv.Close()
+	if err != nil {
+		return err
+	}
+	_, err = fv.WriteString(version)
+	if err != nil {
+		return err
+	}
+
+	fc, err := os.Create("CHANGELOG.md")
+	defer fc.Close()
+	if err != nil {
+		return err
+	}
+	_, err = fc.WriteString(log)
+	if err != nil {
+		return err
+	}
 	return nil
 }
