@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"dagger.io/dagger"
 )
@@ -15,13 +16,19 @@ func main() {
 	}
 	defer client.Close()
 
+	if err := lint(context.Background(), client); err != nil {
+		fmt.Println(err)
+	}
 	if err := test(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := build(context.Background(), client); err != nil {
+	if err := version(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := version(context.Background(), client); err != nil {
+	if err := changelog(context.Background(), client); err != nil {
+		fmt.Println(err)
+	}
+	if err := build(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
 	if err := publish(context.Background(), client); err != nil {
@@ -29,12 +36,21 @@ func main() {
 	}
 }
 
-func test(ctx context.Context, client* dagger.Client) error {
+func lint(ctx context.Context, client *dagger.Client) error {
+	//todo(siasmey@gmail.com): All the linters, export feedback as files
+	//Feedback should be raised by action runner
+	fmt.Println("Linting with Dagger")
+	return nil
+}
+
+func test(ctx context.Context, client *dagger.Client) error {
+	//todo(siasmey@gmail.com): All the Tests, export feedback as files
+	//Feedback should be raised by action runner
 	fmt.Println("Testing with Dagger")
 	return nil
 }
 
-func build(ctx context.Context, client* dagger.Client) error {
+func build(ctx context.Context, client *dagger.Client) error {
 	fmt.Println("Building with Dagger")
 
 	// define build matrix
@@ -92,26 +108,46 @@ func build(ctx context.Context, client* dagger.Client) error {
 	return nil
 }
 
-func version(ctx context.Context, client* dagger.Client) error {
+func version(ctx context.Context, client *dagger.Client) error {
+	//todo(siasmey@gmail.com): This should generate and export the version
+	//Version should be raised and tagged by action runner
+	//Version would ideally be metadata, and not repo changes
 	fmt.Println("Versioning with Dagger")
 
 	src := client.Host().Directory(".")
 	convco := client.Container().From("convco/convco")
 	convco = convco.
-		WithDirectory("/tmp", src).
-		WithWorkdir("/tmp")
+		WithDirectory("/src", src).
+		WithWorkdir("/src")
 
-	// out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
 	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
-	if err != nil {
-		return err
-	}
 	fmt.Println(out)
 	if err != nil {
 		return err
 	}
 
-	out, err = convco.WithExec([]string{"changelog", "-u", out}).Stdout(ctx)
+	fmt.Println("Tagging release")
+	cmd := exec.Command("git", "tag", "-af", fmt.Sprintf("v%s", out))
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func changelog(ctx context.Context, client *dagger.Client) error {
+	// todo(siasmey@gmail.com): This should generate and export the changelog
+	//Changelog should be commited by action runner
+	//Changelog would ideally be metadata, and not repo commits
+	fmt.Println("Changelog Generation with Dagger")
+
+	src := client.Host().Directory(".")
+	convco := client.Container().From("convco/convco")
+	convco = convco.
+		WithDirectory("/src", src).
+		WithWorkdir("/src")
+
+	out, err := convco.WithExec([]string{"changelog"}).Stdout(ctx)
 	if err != nil {
 		return err
 	}
@@ -126,7 +162,9 @@ func version(ctx context.Context, client* dagger.Client) error {
 	return nil
 }
 
-func publish(ctx context.Context, client* dagger.Client) error {
+func publish(ctx context.Context, client *dagger.Client) error {
+	//todo(siasmey@gmail.com): publish all artifacts to platform
+	//changelog/version and build artifacts need to go in here
 	fmt.Println("Publishing with Dagger")
 	return nil
 }
