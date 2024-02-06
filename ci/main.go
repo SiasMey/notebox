@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
+	"strings"
 
 	"dagger.io/dagger"
 )
@@ -22,10 +22,12 @@ func main() {
 	if err := test(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
-	if err := version(context.Background(), client); err != nil {
+	version, err := version(context.Background(), client)
+	if err != nil {
 		fmt.Println(err)
 	}
-	if err := changelog(context.Background(), client); err != nil {
+	log, err := changelog(context.Background(), client, version)
+	if err != nil {
 		fmt.Println(err)
 	}
 	if err := build(context.Background(), client); err != nil {
@@ -34,6 +36,9 @@ func main() {
 	if err := publish(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println(version)
+	fmt.Println(log)
 }
 
 func lint(ctx context.Context, client *dagger.Client) error {
@@ -108,7 +113,7 @@ func build(ctx context.Context, client *dagger.Client) error {
 	return nil
 }
 
-func version(ctx context.Context, client *dagger.Client) error {
+func version(ctx context.Context, client *dagger.Client) (string, error) {
 	//todo(siasmey@gmail.com): This should generate and export the version
 	//Version should be raised and tagged by action runner
 	//Version would ideally be metadata, and not repo changes
@@ -121,45 +126,43 @@ func version(ctx context.Context, client *dagger.Client) error {
 		WithWorkdir("/src")
 
 	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
-	fmt.Println(out)
+	out = strings.TrimSpace(out)
+
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	fmt.Println("Tagging release")
-	cmd := exec.Command("git", "tag", "-af", fmt.Sprintf("v%s", out))
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
+	return out, nil
 }
 
-func changelog(ctx context.Context, client *dagger.Client) error {
+func changelog(ctx context.Context, client *dagger.Client, version string) (string, error) {
 	// todo(siasmey@gmail.com): This should generate and export the changelog
 	//Changelog should be commited by action runner
 	//Changelog would ideally be metadata, and not repo commits
 	fmt.Println("Changelog Generation with Dagger")
 
-	src := client.Host().Directory(".")
 	convco := client.Container().From("convco/convco")
+
+	//Dont know how deep this clones, might run into missing tags
+	project := client.Git("https://github.com/SiasMey/notebox",
+		dagger.GitOpts{KeepGitDir: true}).Branch("trunk").Tree()
+
+	source := client.Container().From("alpine:latest").
+		WithExec([]string{"apk", "add", "git"}).
+		WithWorkdir("/src").
+		WithDirectory("/src", project).
+		WithExec([]string{"git", "tag", fmt.Sprintf("v%s", version)})
+
 	convco = convco.
-		WithDirectory("/src", src).
+		WithDirectory("/src", source.Directory("/src")).
 		WithWorkdir("/src")
 
 	out, err := convco.WithExec([]string{"changelog"}).Stdout(ctx)
 	if err != nil {
-		return err
-	}
-	fc, err := os.Create("CHANGELOG.md")
-	defer fc.Close()
-
-	_, err = fc.WriteString(out)
-	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return out, nil
 }
 
 func publish(ctx context.Context, client *dagger.Client) error {
