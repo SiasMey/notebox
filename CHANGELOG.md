@@ -1,5 +1,14 @@
 # Changelog
 
+### [v1.1.4](https://github.com/SiasMey/notebox/compare/v1.1.3...v1.1.4) (2024-02-09)
+
+#### Fixes
+
+* still needs checkout, just not much
+([d1f2d67](https://github.com/SiasMey/notebox/commit/d1f2d67ccc2814562d863c989a0b215a382b0208))
+* clean up deprecated files
+([2d92d49](https://github.com/SiasMey/notebox/commit/2d92d49e60cd5c5bb64f13b0277172937bbe9591))
+
 ### [v1.1.3](https://github.com/SiasMey/notebox/compare/v1.1.2...v1.1.3) (2024-02-09)
 
 #### Fixes
