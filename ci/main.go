@@ -21,6 +21,7 @@ func main() {
 		panic("Environment variable GH_SECRET is not set")
 	}
 	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
+	is_remote := os.Getenv("GH_ACTION") == ""
 
 	git_src := client.Container().From("alpine:latest").
 		WithExec([]string{"apk", "add", "git"}).
@@ -39,7 +40,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := publish(context.Background(), client, git_src, version, log); err != nil {
+	if err := publish(context.Background(), client, git_src, version, log, is_remote); err != nil {
 		panic(err)
 	}
 }
@@ -81,7 +82,7 @@ func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Conta
 	return out, nil
 }
 
-func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string) error {
+func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string, is_remote bool) error {
 	//todo(siasmey@gmail.com): publish all artifacts to platform
 	//changelog/version and build artifacts need to go in here
 	//should this clone, tag and commit before doing the publish?
@@ -104,12 +105,21 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		WithExec([]string{"git", "add", "CHANGELOG.md"}).
 		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
-		WithExec([]string{"git", "push", "--follow-tags"}).
 		Stdout(ctx)
 	if err != nil {
 		return err
 	}
 	fmt.Println(check)
+
+	if !is_remote {
+		check, err := git_src.
+			WithExec([]string{"git", "push", "--follow-tags"}).
+			Stdout(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Println(check)
+	}
 	return nil
 }
 
