@@ -21,7 +21,7 @@ func main() {
 		panic("Environment variable GH_SECRET is not set")
 	}
 	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
-	is_remote := os.Getenv("GH_ACTION") == ""
+	is_remote := os.Getenv("GH_ACTION") != ""
 	git_src, err := get_source(context.Background(), client, gh_pat)
 	if err != nil {
 		panic(err)
