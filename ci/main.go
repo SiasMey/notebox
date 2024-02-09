@@ -98,7 +98,7 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	if err != nil {
 		return err
 	}
-	git_src.WithFile("version.txt", client.Host().File(fv.Name()))
+	git_src = git_src.WithFile("version.txt", client.Host().File(fv.Name()))
 
 	if err != nil {
 		return err
@@ -113,13 +113,13 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	if err != nil {
 		return err
 	}
-	git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
+	git_src = git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
 
 	check, err := git_src.
 		WithExec([]string{"git", "add", "version.txt", "CHANGELOG.md"}).
 		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
-		// WithExec([]string{"git", "push", "--follow-tags"}).
+		WithExec([]string{"git", "push", "--follow-tags"}).
 		Stdout(ctx)
 	if err != nil {
 		return err
