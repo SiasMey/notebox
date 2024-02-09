@@ -2,3 +2,7 @@
 [credential "https://github.com"]
     username = SiasMey
     helper = "!f() { test \"$1\" = get && echo \"password=$GH_SECRET\"; }; f"
+
+[user]
+    name = Sias Mey Robot
+    email = siasmey+gitrobot@gmail.com

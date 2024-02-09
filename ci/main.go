@@ -16,39 +16,41 @@ func main() {
 	}
 	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
 
+	git_src := client.Container().From("alpine:latest").
+		WithExec([]string{"apk", "add", "git"}).
+		WithWorkdir("/src").
+		WithSecretVariable("GH_SECRET", gh_pat).
+		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
+		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer client.Close()
 
-	version, err := version(context.Background(), client, gh_pat)
+	version, err := version(context.Background(), client, git_src)
 	if err != nil {
 		fmt.Println(err)
 	}
-	_ = version
-	// log, err := changelog(context.Background(), client, version)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// if err := publish(context.Background(), client, version, log); err != nil {
-	// 	fmt.Println(err)
-	// }
+	log, err := changelog(context.Background(), client, git_src, version)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if err := publish(context.Background(), client, git_src, version, log); err != nil {
+		fmt.Println(err)
+	}
 }
 
-func version(ctx context.Context, client *dagger.Client, secret *dagger.Secret) (string, error) {
+func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (string, error) {
 	//todo(siasmey@gmail.com): This should generate and export the version
 	//Version should be raised and tagged by action runner
 	//Version would ideally be metadata, and not repo changes
 	fmt.Println("Versioning with Dagger")
 
-	//Dont know how deep this clones, might run into missing tags
-	project := client.Git("https://github.com/SiasMey/notebox.git",
-		dagger.GitOpts{KeepGitDir: true}).
-		Branch("trunk").Tree()
-
 	convco := client.Container().From("convco/convco")
 	convco = convco.
-		WithDirectory("/src", project).
+		WithDirectory("/src", git_src.Directory("/src")).
 		WithWorkdir("/src")
 
 	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
@@ -57,46 +59,22 @@ func version(ctx context.Context, client *dagger.Client, secret *dagger.Secret) 
 	}
 
 	out = strings.TrimSpace(out)
+	return out, nil
+}
 
-	update, err := client.Container().From("alpine:latest").
-		WithExec([]string{"apk", "add", "git"}).
-		WithWorkdir("/src").
-		WithSecretVariable("GH_SECRET", secret).
-		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
-		WithDirectory("/src", project).
-		WithExec([]string{"git", "tag", fmt.Sprintf("v%s", out)}).
-		WithExec([]string{"git", "push", "origin", "HEAD:trunk", "--follow-tags"}).
+func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
+	convco := client.Container().From("convco/convco")
+	check, err := git_src.
+		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"}).
+		WithExec([]string{"git", "tag"}).
 		Stdout(ctx)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(update)
-
-	return out, nil
-}
-
-func changelog(ctx context.Context, client *dagger.Client, version string) (string, error) {
-	// todo(siasmey@gmail.com): This should generate and export the changelog
-	//Changelog should be commited by action runner
-	//Changelog would ideally be metadata, and not repo commits
-	fmt.Println("Changelog Generation with Dagger")
-
-	convco := client.Container().From("convco/convco")
-	sshAgentPath := os.Getenv("SSH_AUTH_SOCK")
-	//Dont know how deep this clones, might run into missing tags
-	project := client.Git("git@github.com/SiasMey/notebox.git",
-		dagger.GitOpts{KeepGitDir: true,
-			SSHAuthSocket: client.Host().UnixSocket(sshAgentPath)}).
-		Branch("trunk").Tree()
-
-	source := client.Container().From("alpine:latest").
-		WithExec([]string{"apk", "add", "git"}).
-		WithExec([]string{"git", "remote", "remove", "origin"}).
-		WithWorkdir("/src").
-		WithDirectory("/src", project)
+	fmt.Println(check)
 
 	convco = convco.
-		WithDirectory("/src", source.Directory("/src")).
+		WithDirectory("/src", git_src.Directory("/src")).
 		WithWorkdir("/src")
 
 	out, err := convco.WithExec([]string{"changelog"}).Stdout(ctx)
@@ -107,11 +85,12 @@ func changelog(ctx context.Context, client *dagger.Client, version string) (stri
 	return out, nil
 }
 
-func publish(ctx context.Context, client *dagger.Client, version string, log string) error {
+func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string) error {
 	//todo(siasmey@gmail.com): publish all artifacts to platform
 	//changelog/version and build artifacts need to go in here
 	//should this clone, tag and commit before doing the publish?
 	fmt.Println("Publishing with Dagger")
+
 	fv, err := os.Create("version.txt")
 	defer fv.Close()
 	if err != nil {
@@ -131,6 +110,19 @@ func publish(ctx context.Context, client *dagger.Client, version string, log str
 	if err != nil {
 		return err
 	}
+
+	check, err := git_src.
+		WithFile("version.txt", client.Host().File("version.txt")).
+		WithFile("CHANGELOG.md", client.Host().File("CHANGELOG.md")).
+		WithExec([]string{"git", "add", "version.txt", "CHANGELOG.md"}).
+		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
+		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
+		WithExec([]string{"git", "push", "--follow-tags"}).
+		Stdout(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Println(check)
 	return nil
 }
 
