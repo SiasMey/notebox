@@ -68,7 +68,6 @@ func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Conta
 	convco := client.Container().From("convco/convco")
 	check, err := git_src.
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"}).
-		WithExec([]string{"git", "tag"}).
 		Stdout(ctx)
 	if err != nil {
 		return "", err
@@ -92,6 +91,8 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	//changelog/version and build artifacts need to go in here
 	//should this clone, tag and commit before doing the publish?
 	fmt.Println("Publishing with Dagger")
+	fmt.Println(version)
+	fmt.Println(log)
 
 	fv, err := os.CreateTemp("", "version")
 	if err != nil {
@@ -123,7 +124,7 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		WithExec([]string{"git", "add", "version.txt", "CHANGELOG.md"}).
 		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
-		WithExec([]string{"git", "push", "--follow-tags"}).
+		// WithExec([]string{"git", "push", "--follow-tags"}).
 		Stdout(ctx)
 	if err != nil {
 		return err
