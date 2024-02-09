@@ -93,29 +93,33 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	//should this clone, tag and commit before doing the publish?
 	fmt.Println("Publishing with Dagger")
 
-	fv, err := os.Create("version.txt")
-	defer fv.Close()
+	fv, err := os.CreateTemp("", "version")
 	if err != nil {
 		return err
 	}
+	defer os.Remove(fv.Name())
 	_, err = fv.WriteString(version)
 	if err != nil {
 		return err
 	}
+	git_src.WithFile("version.txt", client.Host().File(fv.Name()))
 
-	fc, err := os.Create("CHANGELOG.md")
-	defer fc.Close()
 	if err != nil {
 		return err
 	}
+
+	fc, err := os.CreateTemp("", "changelog")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(fc.Name())
 	_, err = fc.WriteString(log)
 	if err != nil {
 		return err
 	}
+	git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
 
 	check, err := git_src.
-		WithFile("version.txt", client.Host().File("version.txt")).
-		WithFile("CHANGELOG.md", client.Host().File("CHANGELOG.md")).
 		WithExec([]string{"git", "add", "version.txt", "CHANGELOG.md"}).
 		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
