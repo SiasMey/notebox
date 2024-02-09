@@ -1,5 +1,14 @@
 # Changelog
 
+### [v1.1.3](https://github.com/SiasMey/notebox/compare/v1.1.2...v1.1.3) (2024-02-09)
+
+#### Fixes
+
+* no, you need that cache bust
+([9382625](https://github.com/SiasMey/notebox/commit/9382625b51b0b37746f5e51a1ad89bb4dc50bb2b))
+* remove cache bust and version.txt
+([1914eab](https://github.com/SiasMey/notebox/commit/1914eab8f683ab323169924432ea4a8a4cd3eecf))
+
 ### [v1.1.2](https://github.com/SiasMey/notebox/compare/v1.1.1...v1.1.2) (2024-02-09)
 
 #### Fixes
