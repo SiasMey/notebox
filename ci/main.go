@@ -27,6 +27,7 @@ func main() {
 		WithWorkdir("/src").
 		WithSecretVariable("GH_SECRET", gh_pat).
 		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
+		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 
 	version, err := version(context.Background(), client, git_src)
