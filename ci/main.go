@@ -22,14 +22,10 @@ func main() {
 	}
 	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
 	is_remote := os.Getenv("GH_ACTION") == ""
-
-	git_src := client.Container().From("alpine:latest").
-		WithExec([]string{"apk", "add", "git"}).
-		WithWorkdir("/src").
-		WithSecretVariable("GH_SECRET", gh_pat).
-		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
-		WithEnvVariable("CACHEBUSTER", time.Now().String()).
-		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+	git_src, err := get_source(context.Background(), client, gh_pat)
+	if err != nil {
+		panic(err)
+	}
 
 	version, err := version(context.Background(), client, git_src)
 	if err != nil {
@@ -43,6 +39,18 @@ func main() {
 	if err := publish(context.Background(), client, git_src, version, log, is_remote); err != nil {
 		panic(err)
 	}
+}
+
+func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secret) (*dagger.Container, error) {
+	git_src := client.Container().From("alpine:latest").
+		WithExec([]string{"apk", "add", "git"}).
+		WithWorkdir("/src").
+		WithSecretVariable("GH_SECRET", secret).
+		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
+		WithEnvVariable("CACHEBUSTER", time.Now().String()).
+		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+
+	return git_src, nil
 }
 
 func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (string, error) {
