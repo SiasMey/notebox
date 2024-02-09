@@ -15,4 +15,4 @@ jobs:
         run: cd /usr/local && { curl -L https://dl.dagger.io/dagger/install.sh | sh; cd -; }
       - name: Run Dagger pipeline
         run: |
-          export GH_SECRET={{ $secrets.GH_SECRET }} dagger run go run ci/main.go
+          GH_SECRET={{ $secrets.GH_SECRET }} dagger run go run ci/main.go
