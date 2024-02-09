@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"dagger.io/dagger"
 )
@@ -21,6 +22,7 @@ func main() {
 		WithWorkdir("/src").
 		WithSecretVariable("GH_SECRET", gh_pat).
 		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
+		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 
 	if err != nil {
