@@ -27,9 +27,13 @@ func main() {
 		panic(err)
 	}
 
-	version, err := version(context.Background(), client, git_src)
+	bump, version, err := version(context.Background(), client, git_src)
 	if err != nil {
 		panic(err)
+	}
+	if !bump {
+		fmt.Println("No version bump, exiting pipeline")
+		os.Exit(0)
 	}
 	log, err := changelog(context.Background(), client, git_src, version)
 	if err != nil {
@@ -53,10 +57,7 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 	return git_src, nil
 }
 
-func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (string, error) {
-	//todo(siasmey@gmail.com): This should generate and export the version
-	//Version should be raised and tagged by action runner
-	//Version would ideally be metadata, and not repo changes
+func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (bool, string, error) {
 	fmt.Println("Versioning with Dagger")
 
 	convco := client.Container().From("convco/convco")
@@ -64,13 +65,17 @@ func version(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		WithDirectory("/src", git_src.Directory("/src")).
 		WithWorkdir("/src")
 
-	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
+	old_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
 	if err != nil {
-		return "", err
+		return false, "", err
+	}
+	new_ver, err := convco.WithExec([]string{"version"}).Stdout(ctx)
+	if err != nil {
+		return false, "", err
 	}
 
-	out = strings.TrimSpace(out)
-	return out, nil
+	out := strings.TrimSpace(new_ver)
+	return (new_ver == old_ver), out, nil
 }
 
 func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
