@@ -1,5 +1,18 @@
 # Changelog
 
+### [v1.1.5](https://github.com/SiasMey/notebox/compare/v1.1.4...v1.1.5) (2024-02-09)
+
+#### Fixes
+
+* so many flips
+([2765aab](https://github.com/SiasMey/notebox/commit/2765aabbab2e573a72b7c95fc7a050adaa9b84c3))
+* flip remote check
+([b7b0545](https://github.com/SiasMey/notebox/commit/b7b0545f70cc8d9da013ab21e3340c4b10a7fc12))
+* versioning result
+([cdde881](https://github.com/SiasMey/notebox/commit/cdde881c30597a16a7783ea9c4d1ec6cd5825f30))
+* flip check to make it exit when there is no bump
+([a461301](https://github.com/SiasMey/notebox/commit/a4613014151b358e2adff5976ad3f6b6f8b01aa8))
+
 ### [v1.1.4](https://github.com/SiasMey/notebox/compare/v1.1.3...v1.1.4) (2024-02-09)
 
 #### Fixes
