@@ -96,9 +96,6 @@ func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Conta
 }
 
 func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string, is_remote bool) error {
-	//todo(siasmey@gmail.com): publish all artifacts to platform
-	//changelog/version and build artifacts need to go in here
-	//should this clone, tag and commit before doing the publish?
 	fmt.Println("Publishing with Dagger")
 	fmt.Println(version)
 	fmt.Println(log)
@@ -124,7 +121,7 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	}
 	fmt.Println(check)
 
-	if !is_remote {
+	if is_remote {
 		check, err := git_src.
 			WithExec([]string{"git", "push", "--follow-tags"}).
 			Stdout(ctx)
