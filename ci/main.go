@@ -46,6 +46,7 @@ func main() {
 }
 
 func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secret) (*dagger.Container, error) {
+	fmt.Println("Cloning Source")
 	git_src := client.Container().From("alpine:latest").
 		WithExec([]string{"apk", "add", "git"}).
 		WithWorkdir("/src").
@@ -58,7 +59,7 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 }
 
 func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (bool, string, error) {
-	fmt.Println("Versioning with Dagger")
+	fmt.Println("Versioning source")
 
 	convco := client.Container().From("convco/convco")
 	convco = convco.
@@ -79,6 +80,8 @@ func version(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 }
 
 func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
+	fmt.Printf("Generating Changelog for version:%s\n", version)
+
 	convco := client.Container().From("convco/convco")
 	tagged := git_src.
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
@@ -96,9 +99,7 @@ func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Conta
 }
 
 func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string, is_remote bool) error {
-	fmt.Println("Publishing with Dagger")
-	fmt.Println(version)
-	fmt.Println(log)
+	fmt.Printf("Publishing version:%s \n", version)
 
 	fc, err := os.CreateTemp("", "changelog")
 	if err != nil {
@@ -111,24 +112,17 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	}
 	git_src = git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
 
-	check, err := git_src.
-		WithExec([]string{"git", "add", "CHANGELOG.md"}).
-		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
-		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
-		Stdout(ctx)
-	if err != nil {
-		return err
-	}
-	fmt.Println(check)
-
 	if is_remote {
-		check, err := git_src.
+		fmt.Println("Remote execution: Publishing enabled")
+		_, err := git_src.
+			WithExec([]string{"git", "add", "CHANGELOG.md"}).
+			WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
+			WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
 			WithExec([]string{"git", "push", "--follow-tags"}).
 			Stdout(ctx)
 		if err != nil {
 			return err
 		}
-		fmt.Println(check)
 	}
 	return nil
 }
