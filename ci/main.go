@@ -65,11 +65,11 @@ func version(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		WithDirectory("/src", git_src.Directory("/src")).
 		WithWorkdir("/src")
 
-	old_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
+	old_ver, err := convco.WithExec([]string{"version"}).Stdout(ctx)
 	if err != nil {
 		return false, "", err
 	}
-	new_ver, err := convco.WithExec([]string{"version"}).Stdout(ctx)
+	new_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
 	if err != nil {
 		return false, "", err
 	}

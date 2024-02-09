@@ -17,4 +17,5 @@ jobs:
       - name: Run Dagger pipeline
         env:
           GH_SECRET: ${{ secrets.GH_SECRET }}
+          GH_ACTION: "1"
         run: dagger run go run ci/main.go
