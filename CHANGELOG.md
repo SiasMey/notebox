@@ -1,8 +1,21 @@
 # Changelog
 
-## [Unreleased](https://github.com/SiasMey/notebox/compare/v1.1.0...HEAD) (2024-02-09)
+### [v1.1.2](https://github.com/SiasMey/notebox/compare/v1.1.1...v1.1.2) (2024-02-09)
 
-### Fixes
+#### Fixes
+
+* update container as you go
+([b01ef3d](https://github.com/SiasMey/notebox/commit/b01ef3d42dfc88ee752d56452e6b7be2413b8735))
+* containers are copied, not pointered
+([5732417](https://github.com/SiasMey/notebox/commit/57324172e29cfdaebed3d74b29ad93e31e4da07a))
+* print changelog
+([0d1eedd](https://github.com/SiasMey/notebox/commit/0d1eeddff892274e8ee77ee2c4e8ee084a4249e1))
+* make version and changelog temp files
+([28cf9d4](https://github.com/SiasMey/notebox/commit/28cf9d4dc740a44cedfee4612b17f65922c331c4))
+
+### [v1.1.1](https://github.com/SiasMey/notebox/compare/v1.1.0...v1.1.1) (2024-02-09)
+
+#### Fixes
 
 * update ci to release changelog
 ([fbf2a2d](https://github.com/SiasMey/notebox/commit/fbf2a2df021e859a5d2d1a3930c1da25f9b86328))
