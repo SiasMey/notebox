@@ -16,21 +16,12 @@ func main() {
 	}
 	defer client.Close()
 
-	if err := lint(context.Background(), client); err != nil {
-		fmt.Println(err)
-	}
-	if err := test(context.Background(), client); err != nil {
-		fmt.Println(err)
-	}
 	version, err := version(context.Background(), client)
 	if err != nil {
 		fmt.Println(err)
 	}
 	log, err := changelog(context.Background(), client, version)
 	if err != nil {
-		fmt.Println(err)
-	}
-	if err := build(context.Background(), client); err != nil {
 		fmt.Println(err)
 	}
 	if err := publish(context.Background(), client, version, log); err != nil {
@@ -116,10 +107,16 @@ func version(ctx context.Context, client *dagger.Client) (string, error) {
 	//Version would ideally be metadata, and not repo changes
 	fmt.Println("Versioning with Dagger")
 
-	src := client.Host().Directory(".")
+	sshAgentPath := os.Getenv("SSH_AUTH_SOCK")
+	//Dont know how deep this clones, might run into missing tags
+	project := client.Git("git@github.com/SiasMey/notebox.git",
+		dagger.GitOpts{KeepGitDir: true,
+			SSHAuthSocket: client.Host().UnixSocket(sshAgentPath)}).
+		Branch("trunk").Tree()
+
 	convco := client.Container().From("convco/convco")
 	convco = convco.
-		WithDirectory("/src", src).
+		WithDirectory("/src", project).
 		WithWorkdir("/src")
 
 	out, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
@@ -139,10 +136,12 @@ func changelog(ctx context.Context, client *dagger.Client, version string) (stri
 	fmt.Println("Changelog Generation with Dagger")
 
 	convco := client.Container().From("convco/convco")
-
+	sshAgentPath := os.Getenv("SSH_AUTH_SOCK")
 	//Dont know how deep this clones, might run into missing tags
-	project := client.Git("https://github.com/SiasMey/notebox",
-		dagger.GitOpts{KeepGitDir: true}).Branch("trunk").Tree()
+	project := client.Git("git@github.com/SiasMey/notebox.git",
+		dagger.GitOpts{KeepGitDir: true,
+			SSHAuthSocket: client.Host().UnixSocket(sshAgentPath)}).
+		Branch("trunk").Tree()
 
 	source := client.Container().From("alpine:latest").
 		WithExec([]string{"apk", "add", "git"}).
