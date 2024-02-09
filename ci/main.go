@@ -12,6 +12,11 @@ import (
 
 func main() {
 	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
 	if os.Getenv("GH_SECRET") == "" {
 		panic("Environment variable GH_SECRET is not set")
 	}
@@ -25,22 +30,17 @@ func main() {
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer client.Close()
-
 	version, err := version(context.Background(), client, git_src)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	log, err := changelog(context.Background(), client, git_src, version)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	if err := publish(context.Background(), client, git_src, version, log); err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
 
@@ -66,19 +66,14 @@ func version(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 
 func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
 	convco := client.Container().From("convco/convco")
-	check, err := git_src.
-		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"}).
-		Stdout(ctx)
-	if err != nil {
-		return "", err
-	}
-	fmt.Println(check)
+	tagged := git_src.
+		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
 
 	convco = convco.
-		WithDirectory("/src", git_src.Directory("/src")).
+		WithDirectory("/src", tagged.Directory("/src")).
 		WithWorkdir("/src")
 
-	out, err := convco.WithExec([]string{"changelog"}).Stdout(ctx)
+	out, err := convco.WithExec([]string{"changelog", fmt.Sprintf("v%s", version)}).Stdout(ctx)
 	if err != nil {
 		return "", err
 	}
