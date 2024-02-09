@@ -1,0 +1,4 @@
+# or you can specify your own shell snippet
+[credential "https://github.com"]
+    username = SiasMey
+    helper = "!f() { test \"$1\" = get && echo \"password=$GH_SECRET\"; }; f"
