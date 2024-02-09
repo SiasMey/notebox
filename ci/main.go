@@ -27,7 +27,6 @@ func main() {
 		WithWorkdir("/src").
 		WithSecretVariable("GH_SECRET", gh_pat).
 		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
-		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 
 	version, err := version(context.Background(), client, git_src)
@@ -89,21 +88,6 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	fmt.Println(version)
 	fmt.Println(log)
 
-	fv, err := os.CreateTemp("", "version")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(fv.Name())
-	_, err = fv.WriteString(version)
-	if err != nil {
-		return err
-	}
-	git_src = git_src.WithFile("version.txt", client.Host().File(fv.Name()))
-
-	if err != nil {
-		return err
-	}
-
 	fc, err := os.CreateTemp("", "changelog")
 	if err != nil {
 		return err
@@ -116,7 +100,7 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	git_src = git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
 
 	check, err := git_src.
-		WithExec([]string{"git", "add", "version.txt", "CHANGELOG.md"}).
+		WithExec([]string{"git", "add", "CHANGELOG.md"}).
 		WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
 		WithExec([]string{"git", "push", "--follow-tags"}).
