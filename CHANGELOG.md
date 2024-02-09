@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased](https://github.com/SiasMey/notebox/compare/v1.0.0...HEAD) (2024-02-09)
+## [Unreleased](https://github.com/SiasMey/notebox/compare/v1.1.0...HEAD) (2024-02-09)
+
+### Fixes
+
+* update ci to release changelog
+([fbf2a2d](https://github.com/SiasMey/notebox/commit/fbf2a2df021e859a5d2d1a3930c1da25f9b86328))
+
+## [v1.1.0](https://github.com/SiasMey/notebox/compare/v1.0.0...v1.1.0) (2024-02-09)
 
 ### Features
 
