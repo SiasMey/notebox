@@ -1,5 +1,12 @@
 # Changelog
 
+### [v1.1.6](https://github.com/SiasMey/notebox/compare/v1.1.5...v1.1.6) (2024-02-09)
+
+#### Fixes
+
+* publishing on remote
+([247497f](https://github.com/SiasMey/notebox/commit/247497f5e611cf37400fdb4511dff3d4a0a40d04))
+
 ### [v1.1.5](https://github.com/SiasMey/notebox/compare/v1.1.4...v1.1.5) (2024-02-09)
 
 #### Fixes
