@@ -75,7 +75,7 @@ func version(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 	}
 
 	out := strings.TrimSpace(new_ver)
-	return (new_ver == old_ver), out, nil
+	return (new_ver != old_ver), out, nil
 }
 
 func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
