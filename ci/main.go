@@ -32,7 +32,7 @@ func main() {
 		fmt.Println("No version bump, exiting pipeline")
 		os.Exit(0)
 	}
-	log, err := changelog(cctx.ctx, cctx.client, cctx.source, version)
+	log, err := changelog(cctx, version)
 	if err != nil {
 		panic(err)
 	}
@@ -76,18 +76,18 @@ func version(cctx cicontext) (bool, string, error) {
 	return (new_ver != old_ver), out, nil
 }
 
-func changelog(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string) (string, error) {
+func changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
 
-	convco := client.Container().From("convco/convco")
-	tagged := git_src.
+	convco := cctx.client.Container().From("convco/convco")
+	tagged := cctx.source.
 		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
 
 	convco = convco.
 		WithDirectory("/src", tagged.Directory("/src")).
 		WithWorkdir("/src")
 
-	out, err := convco.WithExec([]string{"changelog", fmt.Sprintf("v%s", version)}).Stdout(ctx)
+	out, err := convco.WithExec([]string{"changelog", fmt.Sprintf("v%s", version)}).Stdout(cctx.ctx)
 	if err != nil {
 		return "", err
 	}
