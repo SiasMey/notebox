@@ -95,7 +95,7 @@ func gen_changelog(cctx cicontext, version string) (string, error) {
 	return out, nil
 }
 
-func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, log string, is_remote bool) error {
+func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, changelog string, is_remote bool) error {
 	fmt.Printf("Publishing version:%s \n", version)
 
 	fc, err := os.CreateTemp("", "changelog")
@@ -103,7 +103,7 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		return err
 	}
 	defer os.Remove(fc.Name())
-	_, err = fc.WriteString(log)
+	_, err = fc.WriteString(changelog)
 	if err != nil {
 		return err
 	}
