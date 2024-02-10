@@ -1,5 +1,16 @@
 # Changelog
 
+### [v1.2.1](https://github.com/SiasMey/notebox/compare/v1.2.0...v1.2.1) (2024-02-10)
+
+#### Fixes
+
+* ok, use the clone in gh
+([0d708cb](https://github.com/SiasMey/notebox/commit/0d708cb1f25ff4f11f4ee494873d65f914b037b2))
+* unused time import
+([57bbd73](https://github.com/SiasMey/notebox/commit/57bbd7323a72d38125404a3b1f8eb5e0c35e8751))
+* just use locally cloned files, you have them anyway
+([00d24c9](https://github.com/SiasMey/notebox/commit/00d24c9e004f78b502e00a99c5942436667688b9))
+
 ## [v1.2.0](https://github.com/SiasMey/notebox/compare/v1.1.6...v1.2.0) (2024-02-10)
 
 ### Features
