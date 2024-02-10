@@ -24,6 +24,10 @@ func main() {
 		panic(err)
 	}
 
+	err = check_format(cctx)
+	if err != nil {
+		panic(err)
+	}
 	bump, version, err := version(cctx)
 	if err != nil {
 		panic(err)
@@ -151,6 +155,23 @@ func publish(cctx cicontext, version string, changelog string) error {
 		}
 	} else {
 		fmt.Println(changelog)
+	}
+	return nil
+}
+
+func check_format(cctx cicontext) error {
+	fmt.Println("Checking file format")
+	golang := cctx.client.Container().From("golang:1.21")
+	format, err := golang.
+		WithWorkdir("/src").
+		WithDirectory("/src", cctx.source.Directory("/src")).
+		WithExec([]string{"gofmt", "-s", "-d", "."}).
+		Stdout(cctx.ctx)
+	if err != nil {
+		return err
+	}
+	if format != "" {
+		return errors.New(format)
 	}
 	return nil
 }
