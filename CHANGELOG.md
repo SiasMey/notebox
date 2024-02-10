@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.3.0](https://github.com/SiasMey/notebox/compare/v1.2.1...v1.3.0) (2024-02-10)
+
+### Features
+
+* dont build locally
+([dcf9d02](https://github.com/SiasMey/notebox/commit/dcf9d024f6d805f0a94770ede2059b13ccdce3d2))
+
 ### [v1.2.1](https://github.com/SiasMey/notebox/compare/v1.2.0...v1.2.1) (2024-02-10)
 
 #### Fixes
