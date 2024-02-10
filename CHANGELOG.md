@@ -1,5 +1,27 @@
 # Changelog
 
+## [v1.2.0](https://github.com/SiasMey/notebox/compare/v1.1.6...v1.2.0) (2024-02-10)
+
+### Features
+
+* add linting
+([2f18659](https://github.com/SiasMey/notebox/commit/2f18659d86bc694d4a23a808d7f82ce21a501729))
+* add checking formating of files
+([b47110f](https://github.com/SiasMey/notebox/commit/b47110fb93bcf46a32c8b82c1b35870ab467b7f0))
+* limit changelog for local and remote
+([bd91f65](https://github.com/SiasMey/notebox/commit/bd91f653ec167ec31c1bc614423319a9fe97665f))
+* local prints changelog, but no commit and no tag
+([0216c5e](https://github.com/SiasMey/notebox/commit/0216c5ec518f01380021017f0d576526bd0fa9f1))
+* dev versions for local execution
+([fd3af46](https://github.com/SiasMey/notebox/commit/fd3af46596e3ae1e601139adb2052a58c25039c9))
+* if running local, use local folder as src
+([ed37f21](https://github.com/SiasMey/notebox/commit/ed37f21f6da9b05b30b5bfd9ca44c47352c419be))
+
+### Fixes
+
+* call to publish
+([d5ce9bf](https://github.com/SiasMey/notebox/commit/d5ce9bf2748e462a8e60cf4fd7f7d17bfbc0f330))
+
 ### [v1.1.6](https://github.com/SiasMey/notebox/compare/v1.1.5...v1.1.6) (2024-02-09)
 
 #### Fixes
