@@ -32,12 +32,12 @@ func main() {
 		fmt.Println("No version bump, exiting pipeline")
 		os.Exit(0)
 	}
-	log, err := changelog(cctx, version)
+	changelog, err := gen_changelog(cctx, version)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := publish(cctx.ctx, cctx.client, cctx.source, version, log, cctx.is_remote); err != nil {
+	if err := publish(cctx.ctx, cctx.client, cctx.source, version, changelog, cctx.is_remote); err != nil {
 		panic(err)
 	}
 }
@@ -76,7 +76,7 @@ func version(cctx cicontext) (bool, string, error) {
 	return (new_ver != old_ver), out, nil
 }
 
-func changelog(cctx cicontext, version string) (string, error) {
+func gen_changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
 
 	convco := cctx.client.Container().From("convco/convco")
