@@ -113,8 +113,8 @@ func version(cctx cicontext) (bool, string, error) {
 		new_ver = fmt.Sprintf("%s-dev.%s", old_ver, commit_count)
 	}
 
-	out := strings.TrimSpace(new_ver)
-	return (new_ver != old_ver), out, nil
+	new_ver = strings.TrimSpace(new_ver)
+	return (new_ver != old_ver), new_ver, nil
 }
 
 func gen_changelog(cctx cicontext, version string) (string, error) {
