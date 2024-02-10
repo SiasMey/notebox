@@ -19,6 +19,7 @@ type cicontext struct {
 }
 
 func main() {
+	fmt.Println("::error file=ci/main.go,line=1::Missing semicolon")
 	cctx, err := setup()
 	if err != nil {
 		panic(err)
