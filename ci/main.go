@@ -32,6 +32,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = test(cctx)
+	if err != nil {
+		panic(err)
+	}
 	bump, version, err := version(cctx)
 	if err != nil {
 		panic(err)
@@ -71,6 +75,7 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 			WithDirectory("/src/.git", client.Host().Directory("./.git")).
 			WithDirectory("/src/pkg", client.Host().Directory("./pkg")).
 			WithDirectory("/src/cmd", client.Host().Directory("./cmd")).
+			WithDirectory("/src/test", client.Host().Directory("./test")).
 			WithFile("/src/go.mod", client.Host().File("./go.mod")).
 			WithFile("/src/go.sum", client.Host().File("./go.sum"))
 	}
@@ -182,6 +187,27 @@ func check_format(cctx cicontext) error {
 		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
 		WithEnvVariable("GOCACHE", "/go/build-cache").
 		WithExec([]string{"gofmt", "-s", "-d", "."}).
+		Stdout(cctx.ctx)
+	if err != nil {
+		return err
+	}
+	if format != "" {
+		return errors.New(format)
+	}
+	return nil
+}
+
+func test(cctx cicontext) error {
+	fmt.Println("Runnning Tests")
+	golang := cctx.client.Container().From("golang:1.21")
+	format, err := golang.
+		WithWorkdir("/src").
+		WithDirectory("/src", cctx.source.Directory("/src")).
+		WithMountedCache("/go/pkg/mod", cctx.client.CacheVolume("go-mod-121")).
+		WithMountedCache("/go/build-cache", cctx.client.CacheVolume("go-build-121")).
+		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
+		WithEnvVariable("GOCACHE", "/go/build-cache").
+		WithExec([]string{"go", "test", "github.com/SiasMey/notebox/test"}).
 		Stdout(cctx.ctx)
 	if err != nil {
 		return err
