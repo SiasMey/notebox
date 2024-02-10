@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"dagger.io/dagger"
 )
@@ -61,12 +62,18 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 		WithSecretVariable("GH_SECRET", secret).
 		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig"))
 
-	git_src = git_src.
-		WithDirectory("/src/.git", client.Host().Directory("./.git")).
-		WithDirectory("/src/pkg", client.Host().Directory("./pkg")).
-		WithDirectory("/src/cmd", client.Host().Directory("./cmd")).
-		WithFile("/src/go.mod", client.Host().File("./go.mod")).
-		WithFile("/src/go.sum", client.Host().File("./go.sum"))
+	if is_remote {
+		git_src = git_src.
+			WithEnvVariable("CACHEBUSTER", time.Now().String()).
+			WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+	} else {
+		git_src = git_src.
+			WithDirectory("/src/.git", client.Host().Directory("./.git")).
+			WithDirectory("/src/pkg", client.Host().Directory("./pkg")).
+			WithDirectory("/src/cmd", client.Host().Directory("./cmd")).
+			WithFile("/src/go.mod", client.Host().File("./go.mod")).
+			WithFile("/src/go.sum", client.Host().File("./go.sum"))
+	}
 
 	return git_src, nil
 }
