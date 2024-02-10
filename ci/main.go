@@ -18,30 +18,6 @@ type cicontext struct {
 	is_remote bool
 }
 
-func setup() (cicontext, error) {
-	ctx := context.Background()
-	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
-	defer client.Close()
-
-	if err != nil {
-		return cicontext{}, err
-	}
-
-	if os.Getenv("GH_SECRET") == "" {
-		return cicontext{}, errors.New("No GH_SECRET env var set")
-	}
-	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
-
-	is_remote := os.Getenv("GH_ACTION") != ""
-
-	git_src, err := get_source(context.Background(), client, gh_pat)
-	if err != nil {
-		return cicontext{}, err
-	}
-
-	return cicontext{ctx: ctx, client: client, source: git_src, is_remote: is_remote}, nil
-}
-
 func main() {
 	cctx, err := setup()
 	if err != nil {
@@ -218,4 +194,28 @@ func build(ctx context.Context, client *dagger.Client) error {
 	}
 
 	return nil
+}
+
+func setup() (cicontext, error) {
+	ctx := context.Background()
+	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
+	defer client.Close()
+
+	if err != nil {
+		return cicontext{}, err
+	}
+
+	if os.Getenv("GH_SECRET") == "" {
+		return cicontext{}, errors.New("No GH_SECRET env var set")
+	}
+	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
+
+	is_remote := os.Getenv("GH_ACTION") != ""
+
+	git_src, err := get_source(context.Background(), client, gh_pat)
+	if err != nil {
+		return cicontext{}, err
+	}
+
+	return cicontext{ctx: ctx, client: client, source: git_src, is_remote: is_remote}, nil
 }
