@@ -169,6 +169,10 @@ func check_format(cctx cicontext) error {
 	format, err := golang.
 		WithWorkdir("/src").
 		WithDirectory("/src", cctx.source.Directory("/src")).
+		WithMountedCache("/go/pkg/mod", cctx.client.CacheVolume("go-mod-121")).
+		WithMountedCache("/go/build-cache", cctx.client.CacheVolume("go-build-121")).
+		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
+		WithEnvVariable("GOCACHE", "/go/build-cache").
 		WithExec([]string{"gofmt", "-s", "-d", "."}).
 		Stdout(cctx.ctx)
 	if err != nil {
@@ -199,14 +203,7 @@ func lint(cctx cicontext) error {
 	return nil
 }
 
-func test(ctx context.Context, client *dagger.Client) error {
-	//todo(siasmey@gmail.com): All the Tests, export feedback as files
-	//Feedback should be raised by action runner
-	fmt.Println("Testing with Dagger")
-	return nil
-}
-
-func build(ctx context.Context, client *dagger.Client) error {
+func build(cctx cicontext) error {
 	fmt.Println("Building with Dagger")
 
 	// define build matrix
@@ -214,16 +211,16 @@ func build(ctx context.Context, client *dagger.Client) error {
 	arches := []string{"amd64", "arm64"}
 
 	// get reference to the local project
-	cmd := client.Host().Directory("./cmd")
-	pkg := client.Host().Directory("./pkg")
-	gomod := client.Host().File("./go.mod")
-	gosum := client.Host().File("./go.sum")
+	cmd := cctx.client.Host().Directory("./cmd")
+	pkg := cctx.client.Host().Directory("./pkg")
+	gomod := cctx.client.Host().File("./go.mod")
+	gosum := cctx.client.Host().File("./go.sum")
 
 	// create empty directory to put build outputs
-	outputs := client.Directory()
+	outputs := cctx.client.Directory()
 
 	// get `golang` image
-	golang := client.Container().From("golang:1.21")
+	golang := cctx.client.Container().From("golang:1.21")
 
 	// mount cloned repository into `golang` image
 	golang = golang.
@@ -232,9 +229,9 @@ func build(ctx context.Context, client *dagger.Client) error {
 		WithFile("/src/go.mod", gomod).
 		WithFile("/src/go.sum", gosum).
 		WithWorkdir("/src").
-		WithMountedCache("/go/pkg/mod", client.CacheVolume("go-mod-121")).
+		WithMountedCache("/go/pkg/mod", cctx.client.CacheVolume("go-mod-121")).
+		WithMountedCache("/go/build-cache", cctx.client.CacheVolume("go-build-121")).
 		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
-		WithMountedCache("/go/build-cache", client.CacheVolume("go-build-121")).
 		WithEnvVariable("GOCACHE", "/go/build-cache")
 
 	for _, goos := range oses {
@@ -256,7 +253,7 @@ func build(ctx context.Context, client *dagger.Client) error {
 		}
 	}
 	// write build artifacts to host
-	_, err := outputs.Export(ctx, ".")
+	_, err := outputs.Export(cctx.ctx, ".")
 	if err != nil {
 		return err
 	}
