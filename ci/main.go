@@ -88,7 +88,7 @@ func version(cctx cicontext) (bool, string, error) {
 			return false, "", err
 		}
 
-		new_ver = fmt.Sprintf("%s-dev.%s",old_ver, commit_count)
+		new_ver = fmt.Sprintf("%s-dev.%s", old_ver, commit_count)
 	}
 
 	out := strings.TrimSpace(new_ver)
@@ -98,15 +98,24 @@ func version(cctx cicontext) (bool, string, error) {
 func gen_changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
 
+	out := ""
+	err := errors.New("")
+
 	convco := cctx.client.Container().From("convco/convco")
-	tagged := cctx.source.
-		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
+	if cctx.is_remote {
+		tagged := cctx.source.
+			WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
 
-	convco = convco.
-		WithDirectory("/src", tagged.Directory("/src")).
-		WithWorkdir("/src")
-
-	out, err := convco.WithExec([]string{"changelog", fmt.Sprintf("v%s", version)}).Stdout(cctx.ctx)
+		convco = convco.
+			WithDirectory("/src", tagged.Directory("/src")).
+			WithWorkdir("/src")
+		out, err = convco.WithExec([]string{"changelog", "-m", "20", fmt.Sprintf("v%s", version)}).Stdout(cctx.ctx)
+	} else {
+		convco = convco.
+			WithDirectory("/src", cctx.source.Directory("/src")).
+			WithWorkdir("/src")
+		out, err = convco.WithExec([]string{"changelog", "-m", "2"}).Stdout(cctx.ctx)
+	}
 	if err != nil {
 		return "", err
 	}
