@@ -140,6 +140,8 @@ func publish(cctx cicontext, version string, changelog string) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		fmt.Println(changelog)
 	}
 	return nil
 }
