@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.4.0](https://github.com/SiasMey/notebox/compare/v1.3.0...v1.4.0) (2024-02-10)
+
+### Features
+
+* add running tests
+([26f4700](https://github.com/SiasMey/notebox/commit/26f470029d50876ce9d92fff858900f3857edf15))
+
+### Fixes
+
+* test runner for dagger
+([a00697f](https://github.com/SiasMey/notebox/commit/a00697f75030cec026cbc147007400bb718425f3))
+
 ## [v1.3.0](https://github.com/SiasMey/notebox/compare/v1.2.1...v1.3.0) (2024-02-10)
 
 ### Features
