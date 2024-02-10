@@ -212,7 +212,7 @@ func lint(cctx cicontext) error {
 }
 
 func build(cctx cicontext) error {
-	fmt.Println("Building with Dagger")
+	fmt.Println("Building Binaries")
 	if !cctx.is_remote {
 		fmt.Println("No reason to build locally")
 		return nil
