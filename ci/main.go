@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := publish(cctx.ctx, cctx.client, cctx.source, version, changelog, cctx.is_remote); err != nil {
+	if err := publish(cctx, version, changelog); err != nil {
 		panic(err)
 	}
 }
