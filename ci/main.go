@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -10,24 +11,44 @@ import (
 	"dagger.io/dagger"
 )
 
-func main() {
+type cicontext struct {
+	ctx       context.Context
+	client    *dagger.Client
+	source    *dagger.Container
+	is_remote bool
+}
+
+func setup() (cicontext, error) {
+	ctx := context.Background()
 	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
-	if err != nil {
-		panic(err)
-	}
 	defer client.Close()
 
+	if err != nil {
+		return cicontext{}, err
+	}
+
 	if os.Getenv("GH_SECRET") == "" {
-		panic("Environment variable GH_SECRET is not set")
+		return cicontext{}, errors.New("No GH_SECRET env var set")
 	}
 	gh_pat := client.SetSecret("gh-pat-secret", os.Getenv("GH_SECRET"))
+
 	is_remote := os.Getenv("GH_ACTION") != ""
+
 	git_src, err := get_source(context.Background(), client, gh_pat)
+	if err != nil {
+		return cicontext{}, err
+	}
+
+	return cicontext{ctx: ctx, client: client, source: git_src, is_remote: is_remote}, nil
+}
+
+func main() {
+	cctx, err := setup()
 	if err != nil {
 		panic(err)
 	}
 
-	bump, version, err := version(context.Background(), client, git_src)
+	bump, version, err := version(cctx.ctx, cctx.client, cctx.source)
 	if err != nil {
 		panic(err)
 	}
@@ -35,12 +56,12 @@ func main() {
 		fmt.Println("No version bump, exiting pipeline")
 		os.Exit(0)
 	}
-	log, err := changelog(context.Background(), client, git_src, version)
+	log, err := changelog(cctx.ctx, cctx.client, cctx.source, version)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := publish(context.Background(), client, git_src, version, log, is_remote); err != nil {
+	if err := publish(cctx.ctx, cctx.client, cctx.source, version, log, cctx.is_remote); err != nil {
 		panic(err)
 	}
 }
