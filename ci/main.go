@@ -74,9 +74,21 @@ func version(cctx cicontext) (bool, string, error) {
 	if err != nil {
 		return false, "", err
 	}
-	new_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
-	if err != nil {
-		return false, "", err
+	old_ver = strings.TrimSpace(old_ver)
+
+	new_ver := old_ver
+	if cctx.is_remote {
+		new_ver, err = convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
+		if err != nil {
+			return false, "", err
+		}
+	} else {
+		commit_count, err := cctx.source.WithExec([]string{"git", "rev-list", fmt.Sprintf("v%s..HEAD", old_ver), "--count"}).Stdout(cctx.ctx)
+		if err != nil {
+			return false, "", err
+		}
+
+		new_ver = fmt.Sprintf("%s-dev.%s",old_ver, commit_count)
 	}
 
 	out := strings.TrimSpace(new_ver)
