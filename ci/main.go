@@ -95,7 +95,7 @@ func gen_changelog(cctx cicontext, version string) (string, error) {
 	return out, nil
 }
 
-func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Container, version string, changelog string, is_remote bool) error {
+func publish(cctx cicontext, version string, changelog string) error {
 	fmt.Printf("Publishing version:%s \n", version)
 
 	fc, err := os.CreateTemp("", "changelog")
@@ -103,20 +103,21 @@ func publish(ctx context.Context, client *dagger.Client, git_src *dagger.Contain
 		return err
 	}
 	defer os.Remove(fc.Name())
+
 	_, err = fc.WriteString(changelog)
 	if err != nil {
 		return err
 	}
-	git_src = git_src.WithFile("CHANGELOG.md", client.Host().File(fc.Name()))
+	src := cctx.source.WithFile("CHANGELOG.md", cctx.client.Host().File(fc.Name()))
 
-	if is_remote {
+	if cctx.is_remote {
 		fmt.Println("Remote execution: Publishing enabled")
-		_, err := git_src.
+		_, err := src.
 			WithExec([]string{"git", "add", "CHANGELOG.md"}).
 			WithExec([]string{"git", "commit", "-m", fmt.Sprintf("chore: release %s [skip ci]", version)}).
 			WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Release Version"}).
 			WithExec([]string{"git", "push", "--follow-tags"}).
-			Stdout(ctx)
+			Stdout(cctx.ctx)
 		if err != nil {
 			return err
 		}
@@ -199,11 +200,10 @@ func build(ctx context.Context, client *dagger.Client) error {
 func setup() (cicontext, error) {
 	ctx := context.Background()
 	client, err := dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
-	defer client.Close()
-
 	if err != nil {
 		return cicontext{}, err
 	}
+	defer client.Close()
 
 	if os.Getenv("GH_SECRET") == "" {
 		return cicontext{}, errors.New("No GH_SECRET env var set")
