@@ -44,6 +44,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = build(cctx)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := publish(cctx, version, changelog); err != nil {
 		panic(err)
@@ -84,7 +88,7 @@ func version(cctx cicontext) (bool, string, error) {
 	}
 	old_ver = strings.TrimSpace(old_ver)
 
-	new_ver := old_ver
+	new_ver := ""
 	if cctx.is_remote {
 		new_ver, err = convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
 		if err != nil {
@@ -106,8 +110,8 @@ func version(cctx cicontext) (bool, string, error) {
 func gen_changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
 
-	out := ""
-	err := errors.New("")
+	var out string
+	var err error
 
 	convco := cctx.client.Container().From("convco/convco")
 	if cctx.is_remote {
