@@ -28,6 +28,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = lint(cctx)
+	if err != nil {
+		panic(err)
+	}
 	bump, version, err := version(cctx)
 	if err != nil {
 		panic(err)
@@ -176,10 +180,22 @@ func check_format(cctx cicontext) error {
 	return nil
 }
 
-func lint(ctx context.Context, client *dagger.Client) error {
-	//todo(siasmey@gmail.com): All the linters, export feedback as files
-	//Feedback should be raised by action runner
-	fmt.Println("Linting with Dagger")
+func lint(cctx cicontext) error {
+	fmt.Println("Linting")
+
+	golang := cctx.client.Container().From("golangci/golangci-lint:v1.56.1")
+	lint, err := golang.
+		WithWorkdir("/src").
+		WithDirectory("/src", cctx.source.Directory("/src")).
+		WithMountedCache("/root/.cache", cctx.client.CacheVolume("golangci-lint-cache")).
+		WithExec([]string{"golangci-lint", "run", "-v"}).
+		Stdout(cctx.ctx)
+	if err != nil {
+		return err
+	}
+	if lint != "" {
+		return errors.New(lint)
+	}
 	return nil
 }
 
