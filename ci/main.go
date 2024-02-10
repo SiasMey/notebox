@@ -200,7 +200,7 @@ func check_format(cctx cicontext) error {
 func test(cctx cicontext) error {
 	fmt.Println("Runnning Tests")
 	golang := cctx.client.Container().From("golang:1.21")
-	format, err := golang.
+	_, err := golang.
 		WithWorkdir("/src").
 		WithDirectory("/src", cctx.source.Directory("/src")).
 		WithMountedCache("/go/pkg/mod", cctx.client.CacheVolume("go-mod-121")).
@@ -211,9 +211,6 @@ func test(cctx cicontext) error {
 		Stdout(cctx.ctx)
 	if err != nil {
 		return err
-	}
-	if format != "" {
-		return errors.New(format)
 	}
 	return nil
 }

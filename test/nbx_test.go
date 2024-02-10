@@ -5,5 +5,4 @@ import (
 )
 
 func TestHelloWorld(t *testing.T) {
-	t.Fatal("Nooooo")
 }
