@@ -42,15 +42,22 @@ func main() {
 	}
 }
 
-func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secret) (*dagger.Container, error) {
+func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secret, is_remote bool) (*dagger.Container, error) {
 	fmt.Println("Cloning Source")
 	git_src := client.Container().From("alpine:latest").
 		WithExec([]string{"apk", "add", "git"}).
 		WithWorkdir("/src").
 		WithSecretVariable("GH_SECRET", secret).
-		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig")).
-		WithEnvVariable("CACHEBUSTER", time.Now().String()).
-		WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+		WithFile("/root/.gitconfig", client.Host().File("./ci/.gitconfig"))
+
+	if is_remote {
+		git_src = git_src.
+			WithEnvVariable("CACHEBUSTER", time.Now().String()).
+			WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
+	} else {
+		git_src = git_src.
+			WithDirectory("/src", client.Host().Directory("."))
+	}
 
 	return git_src, nil
 }
@@ -212,7 +219,7 @@ func setup() (cicontext, error) {
 
 	is_remote := os.Getenv("GH_ACTION") != ""
 
-	git_src, err := get_source(context.Background(), client, gh_pat)
+	git_src, err := get_source(context.Background(), client, gh_pat, is_remote)
 	if err != nil {
 		return cicontext{}, err
 	}
