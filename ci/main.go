@@ -48,7 +48,7 @@ func main() {
 		panic(err)
 	}
 
-	bump, version, err := version(cctx.ctx, cctx.client, cctx.source)
+	bump, version, err := version(cctx)
 	if err != nil {
 		panic(err)
 	}
@@ -79,19 +79,19 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 	return git_src, nil
 }
 
-func version(ctx context.Context, client *dagger.Client, git_src *dagger.Container) (bool, string, error) {
+func version(cctx cicontext) (bool, string, error) {
 	fmt.Println("Versioning source")
 
-	convco := client.Container().From("convco/convco")
+	convco := cctx.client.Container().From("convco/convco")
 	convco = convco.
-		WithDirectory("/src", git_src.Directory("/src")).
+		WithDirectory("/src", cctx.source.Directory("/src")).
 		WithWorkdir("/src")
 
-	old_ver, err := convco.WithExec([]string{"version"}).Stdout(ctx)
+	old_ver, err := convco.WithExec([]string{"version"}).Stdout(cctx.ctx)
 	if err != nil {
 		return false, "", err
 	}
-	new_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(ctx)
+	new_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
 	if err != nil {
 		return false, "", err
 	}
