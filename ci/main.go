@@ -19,7 +19,6 @@ type cicontext struct {
 }
 
 func main() {
-	fmt.Println("::error file=ci/main.go,line=1::Missing semicolon")
 	cctx, err := setup()
 	if err != nil {
 		panic(err)
@@ -73,7 +72,6 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 			WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 	} else {
 		git_src = git_src.
-			WithDirectory("/src/.git", client.Host().Directory("./.git")).
 			WithDirectory("/src/pkg", client.Host().Directory("./pkg")).
 			WithDirectory("/src/cmd", client.Host().Directory("./cmd")).
 			WithDirectory("/src/test", client.Host().Directory("./test")).
@@ -86,6 +84,9 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 
 func version(cctx cicontext) (bool, string, error) {
 	fmt.Println("Versioning source")
+	if !cctx.is_remote {
+		return false, "", nil
+	}
 
 	convco := cctx.client.Container().From("convco/convco")
 	convco = convco.
@@ -98,19 +99,9 @@ func version(cctx cicontext) (bool, string, error) {
 	}
 	old_ver = strings.TrimSpace(old_ver)
 
-	new_ver := ""
-	if cctx.is_remote {
-		new_ver, err = convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
-		if err != nil {
-			return false, "", err
-		}
-	} else {
-		commit_count, err := cctx.source.WithExec([]string{"git", "rev-list", fmt.Sprintf("v%s..HEAD", old_ver), "--count"}).Stdout(cctx.ctx)
-		if err != nil {
-			return false, "", err
-		}
-
-		new_ver = fmt.Sprintf("%s-dev.%s", old_ver, commit_count)
+	new_ver, err := convco.WithExec([]string{"version", "--bump"}).Stdout(cctx.ctx)
+	if err != nil {
+		return false, "", err
 	}
 
 	new_ver = strings.TrimSpace(new_ver)
@@ -119,25 +110,21 @@ func version(cctx cicontext) (bool, string, error) {
 
 func gen_changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
+	if !cctx.is_remote {
+		return "", nil
+	}
 
 	var out string
 	var err error
 
 	convco := cctx.client.Container().From("convco/convco")
-	if cctx.is_remote {
-		tagged := cctx.source.
-			WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
+	tagged := cctx.source.
+		WithExec([]string{"git", "tag", "-a", fmt.Sprintf("v%s", version), "-m", "Temp version"})
 
-		convco = convco.
-			WithDirectory("/src", tagged.Directory("/src")).
-			WithWorkdir("/src")
-		out, err = convco.WithExec([]string{"changelog", "-m", "20", fmt.Sprintf("v%s", version)}).Stdout(cctx.ctx)
-	} else {
-		convco = convco.
-			WithDirectory("/src", cctx.source.Directory("/src")).
-			WithWorkdir("/src")
-		out, err = convco.WithExec([]string{"changelog", "-m", "2"}).Stdout(cctx.ctx)
-	}
+	convco = convco.
+		WithDirectory("/src", tagged.Directory("/src")).
+		WithWorkdir("/src")
+	out, err = convco.WithExec([]string{"changelog", "-m", "20", fmt.Sprintf("v%s", version)}).Stdout(cctx.ctx)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +195,7 @@ func test(cctx cicontext) error {
 		WithMountedCache("/go/build-cache", cctx.client.CacheVolume("go-build-121")).
 		WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
 		WithEnvVariable("GOCACHE", "/go/build-cache").
-		WithExec([]string{"go", "test", "github.com/SiasMey/notebox/test"}).
+		WithExec([]string{"go", "test", "./..."}).
 		Stdout(cctx.ctx)
 	if err != nil {
 		return err
