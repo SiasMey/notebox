@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -89,15 +90,20 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 			if err != nil {
 				return nil, err
 			}
-			git_dir_path := strings.Replace(string(git_path), "gitdir: ", "", -1)
-			git_common_path, err := os.ReadFile(fmt.Sprintf("%s/", git_dir_path))
+			git_dir_path := strings.TrimSpace(strings.Replace(string(git_path), "gitdir: ", "", -1))
+			git_dir_path, err = filepath.Abs(git_dir_path)
+			if err != nil {
+				return nil, err
+			}
+
+			git_common_path, err := os.ReadFile(fmt.Sprintf("%s/commondir", git_dir_path))
 			if err != nil {
 				return nil, err
 			}
 			git_src = git_src.WithDirectory(
 				"/src/.git",
 				client.Host().Directory(
-					fmt.Sprintf("%s/%s", git_dir_path, git_common_path),
+					fmt.Sprintf("%s/%s", git_dir_path, strings.TrimSpace(string(git_common_path))),
 				),
 			)
 
