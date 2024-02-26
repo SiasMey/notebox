@@ -115,9 +115,6 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 
 func version(cctx cicontext) (bool, string, error) {
 	fmt.Println("Versioning source")
-	if !cctx.is_remote {
-		return false, "", nil
-	}
 
 	convco := cctx.client.Container().From("convco/convco")
 	convco = convco.
@@ -141,9 +138,6 @@ func version(cctx cicontext) (bool, string, error) {
 
 func gen_changelog(cctx cicontext, version string) (string, error) {
 	fmt.Printf("Generating Changelog for version:%s\n", version)
-	if !cctx.is_remote {
-		return "", nil
-	}
 
 	var out string
 	var err error
