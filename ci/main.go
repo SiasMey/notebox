@@ -72,11 +72,36 @@ func get_source(ctx context.Context, client *dagger.Client, secret *dagger.Secre
 			WithExec([]string{"git", "clone", "https://github.com/SiasMey/notebox.git", "."})
 	} else {
 		git_src = git_src.
-			WithDirectory("/src/pkg", client.Host().Directory("./pkg")).
-			WithDirectory("/src/cmd", client.Host().Directory("./cmd")).
-			WithDirectory("/src/test", client.Host().Directory("./test")).
-			WithFile("/src/go.mod", client.Host().File("./go.mod")).
-			WithFile("/src/go.sum", client.Host().File("./go.sum"))
+			WithDirectory("/src/pkg", client.Host().Directory("pkg")).
+			WithDirectory("/src/cmd", client.Host().Directory("cmd")).
+			WithDirectory("/src/test", client.Host().Directory("test")).
+			WithFile("/src/go.mod", client.Host().File("go.mod")).
+			WithFile("/src/go.sum", client.Host().File("go.sum"))
+
+		git_dir, err := os.Stat("./.git")
+		if err != nil {
+			return nil, err
+		}
+		if git_dir.IsDir() {
+			git_src = git_src.WithDirectory("/src/.git", client.Host().Directory(".git"))
+		} else {
+			git_path, err := os.ReadFile(".git")
+			if err != nil {
+				return nil, err
+			}
+			git_dir_path := strings.Replace(string(git_path), "gitdir: ", "", -1)
+			git_common_path, err := os.ReadFile(fmt.Sprintf("%s/", git_dir_path))
+			if err != nil {
+				return nil, err
+			}
+			git_src = git_src.WithDirectory(
+				"/src/.git",
+				client.Host().Directory(
+					fmt.Sprintf("%s/%s", git_dir_path, git_common_path),
+				),
+			)
+
+		}
 	}
 
 	return git_src, nil
