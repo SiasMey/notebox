@@ -1,5 +1,12 @@
 # Changelog
 
+### [v1.4.1](https://github.com/SiasMey/notebox/compare/v1.4.0...v1.4.1) (2024-02-26)
+
+#### Fixes
+
+* fix making it work with worktrees
+([070c68e](https://github.com/SiasMey/notebox/commit/070c68e00e1f76ab1a99d13c4b4161cc270729e4))
+
 ## [v1.4.0](https://github.com/SiasMey/notebox/compare/v1.3.0...v1.4.0) (2024-02-10)
 
 ### Features
