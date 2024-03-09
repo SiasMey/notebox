@@ -1,9 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/SiasMey/notebox/pkg/nbx"
 )
 
 func main() {
-	nbx.Main()
+	os.Exit(nbx.Main())
 }
