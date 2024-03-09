@@ -1,0 +1,7 @@
+exec nbx tags
+stdout 'new-tags'
+
+-- test1.md --
+# Test
+
+#[[new-tags]]

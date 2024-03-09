@@ -6,8 +6,8 @@ import (
 	"regexp"
 )
 
-var tag_pattern = regexp.MustCompile(`#[a-zA-Z0-9-_]+`)
-var tag_strip_pattern = regexp.MustCompile(`#([a-zA-Z0-9-_]+)`)
+var tag_pattern = regexp.MustCompile(`#[a-zA-Z0-9-_]+|#\[\[[a-zA-Z0-9-_]+\]\]`)
+var tag_strip_pattern = regexp.MustCompile(`#([a-zA-Z0-9-_]+)|#\[\[([a-zA-Z0-9-_]+)\]\]`)
 
 const usage = `usage: nbx [subcommand]
 
@@ -38,7 +38,7 @@ func getTagsFromString(content_str string) []string {
 
 func stripTags(tags []string) []string {
 	for i, tag := range tags {
-		tags[i] = tag_strip_pattern.ReplaceAllString(tag, "$1")
+		tags[i] = tag_strip_pattern.ReplaceAllString(tag, "$1$2")
 	}
 	return tags
 }
