@@ -3,7 +3,11 @@ package nbx
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 )
+
+var tag_pattern = regexp.MustCompile(`#[a-zA-Z0-9-_]+`)
 
 const usage = `usage: nbx [subcommand]
 
@@ -16,6 +20,14 @@ func Main() int {
 		return 1
 	}
 
-	fmt.Println("Hello to you,", os.Args[1])
+	content, err := os.ReadFile("test1.md")
+	if err != nil {
+		return 1
+	}
+
+	content_str := string(content)
+	for _, tag := range tag_pattern.FindAllString(content_str, -1) {
+		fmt.Fprintln(os.Stdout, strings.Trim(tag, "#"))
+	}
 	return 0
 }

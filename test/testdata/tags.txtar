@@ -1,0 +1,7 @@
+exec nbx tags
+stdout 'no-tags'
+
+-- test1.md --
+# Test
+
+#no-tags
