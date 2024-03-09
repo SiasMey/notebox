@@ -1,2 +1,2 @@
-exec echo 'hello world'
-stdout 'hello world\n'
+exec nbx
+stdout 'Hello, World\n'

@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/SiasMey/notebox/pkg/nbx"
+)
 
 func main() {
-	fmt.Print("Hello World, from notebox")
+	nbx.Main()
 }
