@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 )
 
 var tag_pattern = regexp.MustCompile(`#[a-zA-Z0-9-_]+`)
+var tag_strip_pattern = regexp.MustCompile(`#([a-zA-Z0-9-_]+)`)
 
 const usage = `usage: nbx [subcommand]
 
@@ -26,12 +26,19 @@ func Main() int {
 	}
 
 	content_str := string(content)
-	for _, tag := range getTagsFromFile(content_str) {
-		fmt.Fprintln(os.Stdout, strings.Trim(tag, "#"))
+	for _, tag := range getTagsFromString(content_str) {
+		fmt.Fprintln(os.Stdout, tag)
 	}
 	return 0
 }
 
-func getTagsFromFile(content_str string) []string {
-	return tag_pattern.FindAllString(content_str, -1)
+func getTagsFromString(content_str string) []string {
+	return stripTags(tag_pattern.FindAllString(content_str, -1))
+}
+
+func stripTags(tags []string) []string {
+	for i, tag := range tags {
+		tags[i] = tag_strip_pattern.ReplaceAllString(tag, "$1")
+	}
+	return tags
 }
