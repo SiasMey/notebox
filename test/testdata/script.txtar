@@ -1,0 +1,3 @@
+! exec nbx
+! stdout .
+stderr 'usage: hello NAME\n'
