@@ -1,0 +1,9 @@
+! exec nbx
+! stdout .
+cmp stderr usage.txt
+
+-- usage.txt --
+usage: nbx [subcommand]
+
+subcommands:
+  tags: lists all tags in notebox
