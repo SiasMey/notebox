@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.5.0](https://github.com/SiasMey/notebox/compare/v1.4.1...v1.5.0) (2024-03-11)
+
+### Features
+
+* match wikilink style tags
+([97547d8](https://github.com/SiasMey/notebox/commit/97547d8c75b276ecdeba4d3c45ee4d0439a475f9))
+* list tags in the notebox
+([02186c3](https://github.com/SiasMey/notebox/commit/02186c36f2dbe3b9e21e39ff6bf388fe8ad5ceb5))
+* update usage dialogue
+([c28246b](https://github.com/SiasMey/notebox/commit/c28246bdb8c7c4c1543836be3dccd90fbcbc8b8a))
+
 ### [v1.4.1](https://github.com/SiasMey/notebox/compare/v1.4.0...v1.4.1) (2024-02-26)
 
 #### Fixes
